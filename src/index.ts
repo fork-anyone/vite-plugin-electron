@@ -41,7 +41,7 @@ export interface ElectronOptions {
      */
     startup: (argv?: string[], options?: import('node:child_process').SpawnOptions, customElectronPkg?: string) => Promise<void>
     /** Reload Electron-Renderer */
-    reload: () => void
+    reload: (argv?: string[], options?: import('node:child_process').SpawnOptions, customElectronPkg?: string) => void
   }) => void | Promise<void>
 }
 
@@ -94,14 +94,16 @@ export default function electron(options: ElectronOptions | ElectronOptions[]): 
                       // Why not use Vite's built-in `/@vite/client` to implement Hot reload?
                       // Because Vite only inserts `/@vite/client` into the `*.html` entry file, the preload scripts are usually a `*.js` file.
                       // @see - https://github.com/vitejs/vite/blob/v5.2.11/packages/vite/src/node/server/middlewares/indexHtml.ts#L399
-                      reload() {
+                      reload(argv = ['.', '--no-sandbox'],
+                        options?: import('node:child_process').SpawnOptions,
+                        customElectronPkg?: string) {
                         if (process.electronApp) {
                           (server.hot || server.ws).send({ type: 'full-reload' })
 
                           // For Electron apps that don't need to use the renderer process.
                           startup.send('electron-vite&type=hot-reload')
                         } else {
-                          startup()
+                          startup(argv, options, customElectronPkg)
                         }
                       },
                     })
